@@ -1,4 +1,5 @@
-import React, { forwardRef } from 'react'
+import React, { forwardRef } from 'react';
+import Image from 'next/image';
 
 export interface PrintViewProps {
   internFullName: string
@@ -51,71 +52,78 @@ export const PrintView = forwardRef<HTMLDivElement, PrintViewProps>(({
       shadow-lg         
     `}
   >
-    <header className="flex justify-between items-start mb-[10mm]">
+    <header className="flex justify-between items-start mb-[8mm]">
       <div>
-        <img src="/images/avb.png" alt="AVB Logo" width={272} height={116} />
-        <p className="p-small">AUTO VENTURE BUILDER</p>
+        <Image src="/images/avb.png" alt="AVB Logo" width={120} height={57} />
+        <p className="p-print-small text-center">AUTO VENTURE BUILDER</p>
       </div>
       <div className="text-right">
-        <p className='p-small'><strong>Auto Venture Builder Invest Inc</strong></p>
-            <p className='p-small'>373 Lexington Avenue,</p>
-            <p className='p-small'>369 New Your, NY, 10017</p>
-            <p className='p-small'><strong>AVB Invest Inc</strong></p>
-            <p className='p-small'>@onboarding_team@avbinvest.co</p>
+        <p className='p-print-small font-medium'>Auto Venture Builder Invest Inc</p>
+            <p className='p-print-small'>373 Lexington Avenue,</p>
+            <p className='p-print-small'>369 New Your, NY, 10017</p>
+            <br />
+            <p className='p-print-small font-medium'>AVB Invest Inc</p>
+            <p className='p-print-small'>@onboarding_team@avbinvest.co</p>
       </div>
     </header>
 
-    <h1 className="text-center text-[24pt] mb-[15mm]">
+    <h1 className="text-center text-[24px] mb-[8mm]">
       Letter of Recommendation
     </h1>
 
-    <p className="mb-[6mm]">
-      This letter confirms that <strong>{internFullName}</strong> has finished an internship as a{' '}
-      <strong>{positionName}</strong> in <strong>{divisionName}</strong>{' '}at AVB from{' '}
-      <strong>{startDay}</strong> to <strong>{endDay}</strong>.
+    <p className="mb-[2mm] p-print">
+      This letter confirms that {internFullName} has finished an internship as a{' '}
+      {positionName} in {divisionName}{' '}at AVB from{' '}
+      {startDay} to {endDay}
     </p>
 
-    <p className="mb-[4mm]">
-      And demonstrated the following skills and competences:
+    <p className="mb-[2mm] p-print">
+      and demonstrated the following skills and competences:
     </p>
-    <ul className="p-small list-none list-inside mb-[8mm]">
+    <ul className="p-print list-none list-inside mb-[2mm]">
       {skills.map(skill => (
         <li key={skill}>{skill}</li>
       ))}
     </ul>
 
-    <p className="mb-[6mm]">
+    <p className="mb-[2mm] p-print">
       During the internship worked on the following projects:
       <br />
       {projectsTasks}
     </p>
 
-    <p className="mb-[6mm]">
+    <p className="mb-[2mm] p-print">
       {personalEvaluation}
     </p>
 
-    <p className="mb-[8mm]">
+    <p className="mb-[2mm] p-print">
       {aboutCobuilder}
     </p>
 
-    <p className="mb-[8mm]">
+    <p className="mb-[2mm] p-print ">
       It is my great pleasure to recommend this Intern for employment as a{' '}
-      <strong>{recommendationPosition}</strong>.
+      {recommendationPosition}.
     </p>
-    <p className="mb-[12mm]">
-      {sentence}
+    <p className="mb-[10mm] p-print">
+      {sentence}.
     </p>
 
-    <div className="mb-12">
-      <p>Sincerely,</p>
-      <p className="mt-4">
-        <strong>{responsibleFullName}</strong><br />
+    <div className="grid grid-cols-[max-content_1fr_max-content] items-start gap-4 mb-10 p-print">
+      <div className="flex flex-col space-y-1">
+      <p className='p-small'>Sincerely,</p>
+      <p className="mt-4 p-print">
+        {responsibleFullName}<br />
         {responsiblePosition}<br />
         {responsibleEmail}
       </p>
-    </div>
-
-    <p className="text-right">{dateOfIssue}</p>
+      </div>
+    
+<div className="flex justify-center">
+     <Image src="/images/signature.png" alt="signature" width={120} height={77} priority className="object-contain"/>
+     <Image src="/images/stamp.png" alt="stamp" width={120} height={77} priority className="object-contain"/>
+</div>
+</div>
+    <p className="text-end p-print">{dateOfIssue}</p>
   </div>
 ))
 PrintView.displayName = 'PrintView'

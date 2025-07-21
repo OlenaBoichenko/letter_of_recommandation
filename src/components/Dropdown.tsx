@@ -23,7 +23,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
       value={value}
       onChange={e => onChange(e.target.value)}
       className={`
-       border-b border-black focus:outline-none
+       border-b border-black 
+       focus:outline-none
+       w-[335px]
         pt-[8px] pb-[8px] pl-[4px]
         ${isPlaceholder
           ? 'text-[#192836]/40'

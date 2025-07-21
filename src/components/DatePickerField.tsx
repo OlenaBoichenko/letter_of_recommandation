@@ -22,7 +22,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
             onChange={onChange}
             dateFormat="dd/MM/yyyy"
             placeholderText={placeholderText}
-            className="w-[321px] pl-[8px] pt-[6px] pb-[6px]"
+            className="w-[335px] pl-[8px] pt-[6px] pb-[6px]"
             customInput={
                 <CustomDateInput placeholder={placeholderText} />
             }
@@ -46,7 +46,7 @@ const CustomDateInput = forwardRef<HTMLDivElement, CustomInputProps>(
             className={`
                 relative flex 
                 border-b 
-                text-[28px] text-[#192836] 
+                text-[22px] text-[#192836] 
                 cursor-pointer select-none
                 ${className}
             `}

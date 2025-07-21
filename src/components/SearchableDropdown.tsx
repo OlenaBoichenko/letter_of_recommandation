@@ -48,7 +48,7 @@ export const SearchableDropdown = ({
             focus:outline-none 
             w-full 
             py-1 px-2 
-            text-[28px]"
+            text-[22px]"
           onChange={(e) => {
             const value = e.target.value;
             setQuery(value);
@@ -70,7 +70,7 @@ export const SearchableDropdown = ({
                 key={`${intern.full_name}-${index}`}
                 value={intern}
                 className={({ active }) =>
-                  `cursor-pointer px-3 py-1 text-[28px] ${
+                  `cursor-pointer px-3 py-1 text-[22px] ${
                     active ? 'bg-blue-100' : ''
                   }`
                 }

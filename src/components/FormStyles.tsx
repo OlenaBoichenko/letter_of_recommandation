@@ -1,12 +1,8 @@
 import React from 'react';
 
 // Component for <select>
-interface FormSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  placeholder?: boolean;
-}
-export const FormSelect: React.FC<FormSelectProps> = ({
+export const FormSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>> = ({
   children,
-  placeholder = true,
   className = '',
   ...props
 }) => (
@@ -15,7 +11,7 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       border-b
       border-black 
       focus:outline-none
-      text-[28px]
+      text-[22px]
       text-[#192836] 
       ${className}`}
     {...props}
@@ -25,20 +21,14 @@ export const FormSelect: React.FC<FormSelectProps> = ({
 );
 
 // Component for <option>
-interface FormOptionProps extends React.OptionHTMLAttributes<HTMLOptionElement> {
-  placeholder?: boolean;
-}
-
-export const FormOption: React.FC<FormOptionProps> = ({
+export const FormOption: React.FC<React.OptionHTMLAttributes<HTMLOptionElement>> = ({
   children,
-  placeholder = false,
   className = '',
   ...props
 }) => (
   <option
     className={`
-      text-[28px]
-     
+      text-[22px]
     text-[#192836] ${className}`}
     {...props}
   >

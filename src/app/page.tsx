@@ -1,32 +1,49 @@
-"use client"
+'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { DatePickerField } from '@/components/DatePickerField';
 import { Dropdown } from '@/components/Dropdown';
 import { SearchableDropdown } from '@/components/SearchableDropdown';
-import { MultiSelectDropdown, GroupedSkills } from '@/components/MultiSelectDropdown';
-import { PrintView } from '@/components/PrintView'
+import {
+  MultiSelectDropdown,
+  GroupedSkills,
+} from '@/components/MultiSelectDropdown';
+import { PrintView } from '@/components/PrintView';
+import { Intern, DivisionsResponse, Position } from '@/interfaces/index';
 // for pdf
 import jsPDF from 'jspdf';
 import { toPng } from 'html-to-image';
 
+// Generic API response wrapper
+interface ApiResponse<T> {
+  results: T[];
+}
+
+// Response type for positions
+type PositionsResponse = ApiResponse<Position>;
+// Raw item from skills/tasks/evaluations endpoints
+interface OptionItem {
+  title: string;
+  name?: string;
+  text?: string;
+}
 
 // Array with sentences for the dropdown list
 const sentences = [
   'Please, let me know, if you need any additional information.',
   'We recommend the intern as a promising young specialist in the field of IT law.',
-  'The internship was successfully completed with excellent results',
+  'The internship was successfully completed with excellent results.',
   'The intern handled all assigned tasks with confidence and demonstrated a high level of preparation.',
   'Showed confident use of legal tools necessary in the field of information technology.',
-  'We are confident in the intern’s professional potential and wish them continued success.'
-]
+  'We are confident in the intern’s professional potential and wish them continued success.',
+];
 
 // Interface for the intern object
-interface Intern {
-  full_name: string;
-  position_name: string;
-}
+// interface Intern {
+//   full_name: string;
+//   position_name: string;
+// }
 
 const RecommendationPage: React.FC = () => {
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -34,18 +51,18 @@ const RecommendationPage: React.FC = () => {
   const [positions, setPositions] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  
-  const [skillsOptions, setSkillsOptions] = useState<GroupedSkills[]>([])
-  const [tasksOptions, setTasksOptions] = useState<GroupedSkills[]>([])
-  const [evalOptions, setEvalOptions] = useState<GroupedSkills[]>([])
+
+  const [skillsOptions, setSkillsOptions] = useState<GroupedSkills[]>([]);
+  const [tasksOptions, setTasksOptions] = useState<GroupedSkills[]>([]);
+  const [evalOptions, setEvalOptions] = useState<GroupedSkills[]>([]);
 
   const [selectedInterns, setSelectedInterns] = useState<Intern | null>(null);
-  const [selectedDivision, setSelectedDivision] = useState('');
-  const [selectedPosition, setSelectedPosition] = useState('');
+  const [selectedDivision, setSelectedDivision] = useState<string>('');
+  const [selectedPosition, setSelectedPosition] = useState<string>('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([])
-  const [selectedEvals, setSelectedEvals] = useState<string[]>([])
-  const [selectedSenteces, SetSelectedSentences] = useState('');
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [selectedEvals, setSelectedEvals] = useState<string[]>([]);
+  const [selectedSenteces, SetSelectedSentences] = useState<string>('');
 
   const [formState, setFormState] = useState({
     interns: '',
@@ -66,17 +83,18 @@ const RecommendationPage: React.FC = () => {
 
   // Access token for API
   const token = process.env.NEXT_PUBLIC_API_TOKEN;
-  
+
   //generation a letter in PDF format
-  const letterRef = useRef<HTMLDivElement>(null)
+  const letterRef = useRef<HTMLDivElement>(null);
 
   // generation dates in yyyy-MM-dd
   const fmt = (d: Date | null): string =>
-    d ? d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
+    d
+      ? d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      })
       : '';
 
   // Handle form submission and PDF generation
@@ -84,28 +102,27 @@ const RecommendationPage: React.FC = () => {
     e.preventDefault();
     if (!letterRef.current) return;
 
-    const dataUrl = await toPng(letterRef.current)
+    const dataUrl = await toPng(letterRef.current);
 
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const img = new window.Image()
-    img.src = dataUrl
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const img = new window.Image();
+    img.src = dataUrl;
 
-    await new Promise((r) => (img.onload = r))
-    const pdfHeight = (img.height * pdfWidth) / img.width
-    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+    await new Promise((r) => (img.onload = r));
+    const pdfHeight = (img.height * pdfWidth) / img.width;
+    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    const rawName = selectedInterns?.full_name || 'intern'
+    const rawName = selectedInterns?.full_name || 'intern';
 
     //username in the email title
     const safeName = rawName
       .trim()
       .replace(/\s+/g, '_')
-      .replace(/[^a-zA-Z0-9_]/g, '')
-    const fileName = `recommendation_letter_${safeName}.pdf`
+      .replace(/[^a-zA-Z0-9_]/g, '');
+    const fileName = `recommendation_letter_${safeName}.pdf`;
 
-    pdf.save(fileName)
-
+    pdf.save(fileName);
 
     // generate the payload for the backend
     const payload = {
@@ -113,63 +130,64 @@ const RecommendationPage: React.FC = () => {
       division_name: selectedDivision,
       start_day: fmt(startDate),
       end_day: fmt(endDate),
-      skills: selectedSkills,                         // Skills/Achievements/Etc.
-      projects_tasks: selectedTasks.join('; '),       // Projects Completed/Tasks
-      personal_evaluation: selectedEvals.join('; '),  // Personal Evaluation 
-      about_cobuilder: formState.notes,               // Free writing About Intern
-      recommendation_position: selectedPosition,      // убрать если письмо не будет отправляться на сервер
+      skills: selectedSkills, // Skills/Achievements/Etc.
+      projects_tasks: selectedTasks.join('; '), // Projects Completed/Tasks
+      personal_evaluation: selectedEvals.join('; '), // Personal Evaluation
+      about_cobuilder: formState.notes, // Free writing About Intern
+      recommendation_position: selectedPosition, // убрать если письмо не будет отправляться на сервер
       responsible_full_name: formState.recommenderName,
       responsible_position: formState.recommenderPosition,
       responsible_email: formState.recommenderEmail,
       dataOfIssue: formattedDate,
-    }
+    };
 
     try {
       // sending to backend
       const pdfBlob = pdf.output('blob');
       const formData = new FormData();
       formData.append('file', pdfBlob, 'recommendation.pdf');
-      formData.append('data', JSON.stringify(payload))
+      formData.append('data', JSON.stringify(payload));
 
       const res = await fetch(
         'http://49.12.128.167:8052/api/v1/letters/recommendations/',
         {
           method: 'POST',
           headers: {
-            // 'Content-Type':  'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
-      )
+        },
+      );
 
       if (!res.ok) {
-        const err = await res.json()
-        console.error('Error creating letter:', err)
-        alert('Failed to send recommendation letter')
-        return
+        const err = await res.json();
+        console.error('Error creating letter:', err);
+        alert('Failed to send recommendation letter');
+        return;
       }
 
-      const data = await res.json()
-      alert('Recommendation letter успешно создано!')
+      // const data = await res.json()
+      alert('Recommendation letter was successfully created!');
 
       // form reset
-      setSelectedInterns(null)
-      setSelectedDivision('')
-      setStartDate(null)
-      setSelectedPosition('')
-      setSelectedSkills([])
-      setSelectedTasks([])
-      setSelectedEvals([])
+      setSelectedInterns(null);
+      setSelectedDivision('');
+      setStartDate(null);
+      setSelectedPosition('');
+      setSelectedSkills([]);
+      setSelectedTasks([]);
+      setSelectedEvals([]);
     } catch (e) {
-      console.error(e)
-      alert('Network error when sending a letter')
+      console.error(e);
+      alert('Network error when sending a letter');
     }
-  }
+  };
 
   // Fetch interns from the API based on the search query
-  const fetchInterns = async (query: string) => {
-    const url = `http://49.12.128.167:8052/api/v1/users/external_users/?full_name=${encodeURIComponent(query)}`;
+  const fetchInterns = async (query: string): Promise<void> => {
+    const url = `http://49.12.128.167:8052/api/v1/users/external_users/?full_name=${encodeURIComponent(
+      query,
+    )}`;
 
     const res = await fetch(url, {
       headers: {
@@ -178,14 +196,14 @@ const RecommendationPage: React.FC = () => {
       },
     });
 
-    const data = await res.json();
+    const data = (await res.json()) as ApiResponse<Intern>;
     setInterns(data.results);
   };
 
   // Handle intern selection from the dropdown
   const onInternSelect = (intern: Intern | null) => {
     setSelectedInterns(intern);
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       internName: intern?.full_name || '',
       internPosition: intern?.position_name || '',
@@ -193,7 +211,6 @@ const RecommendationPage: React.FC = () => {
   };
 
   useEffect(() => {
-
     // Download divisions
     fetch('http://49.12.128.167:8052/api/v1/organizations/divisions', {
       headers: {
@@ -201,11 +218,8 @@ const RecommendationPage: React.FC = () => {
         'Content-Type': 'application/json',
       },
     })
-      .then((res) => res.json())
-      .then((data) => {
-        const names = data.results.map((item: any) => item.name);
-        setDivisions(names || [])
-      });
+      .then((res) => res.json() as Promise<DivisionsResponse>)
+      .then((data) => setDivisions(data.results.map((d) => d.name)));
 
     //Download positions
     fetch('http://49.12.128.167:8052/api/v1/users/positions', {
@@ -214,71 +228,67 @@ const RecommendationPage: React.FC = () => {
         'Content-Type': 'application/json',
       },
     })
-      .then((res) => res.json())
-      .then((data) => {
-        const positions = data.results.map((item: any) => item.name);
-        setPositions(positions || [])
-      });
-  }, []);
+      .then((res) => res.json() as Promise<PositionsResponse>)
+      .then((data) => setPositions(data.results.map((p) => p.name)));
+  }, [token]);
 
   // Fetch skills, tasks, and evaluations when the selected division and intern position changes
   useEffect(() => {
-    if (!selectedDivision || !formState.internPosition) return
+    if (!selectedDivision || !formState.internPosition) return;
     const params = new URLSearchParams({
-      division_name: selectedDivision,    
-    })
+      division_name: selectedDivision,
+    });
 
     const BACKEND = 'http://49.12.128.167:8052';
-    const headers = { Authorization: `Bearer ${token}` }
-
-    const SKILLS_URL = `${BACKEND}/api/v1/letters/skills/?${params}`
-    const TASKS_URL = `${BACKEND}/api/v1/letters/project-tasks/?${params}`
-    const EVAL_URL = `${BACKEND}/api/v1/letters/evaluations/?${params}`
+    const headers = { Authorization: `Bearer ${token}` };
 
     // Fetch skills, tasks, and evaluations from the API
     Promise.all([
-      fetch(SKILLS_URL, { headers }).then(r => r.json()),
-      fetch(TASKS_URL, { headers }).then(r => r.json()),
-      fetch(EVAL_URL, { headers }).then(r => r.json()),
-    ]).then(([skillsData, tasksData, evalData]) => {
-      // Grouping skills, tasks, and evaluations by title 
-      const groupByTitle = (arr: any[]): GroupedSkills[] => {
-        const grouped: Record<string, string[]> = {};
-        // Iterate over each item in the array
-        arr.forEach(item => {
-          const label = item.name ?? item.text ?? "";
-          if (!grouped[item.title]) grouped[item.title] = [];
-          grouped[item.title].push(label);
-        });
+      fetch(`${BACKEND}/api/v1/letters/skills/?${params}`, {
+        headers,
+      }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
+      fetch(`${BACKEND}/api/v1/letters/project-tasks/?${params}`, {
+        headers,
+      }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
+      fetch(`${BACKEND}/api/v1/letters/evaluations/?${params}`, {
+        headers,
+      }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
+    ])
+      .then(([skillsData, tasksData, evalData]) => {
+        // Grouping skills, tasks, and evaluations by title
+        const groupByTitle = (arr: OptionItem[]): GroupedSkills[] => {
+          const grouped: Record<string, string[]> = {};
+          // Iterate over each item in the array
+          arr.forEach((item) => {
+            const label = item.name ?? item.text ?? '';
+            if (!grouped[item.title]) grouped[item.title] = [];
+            grouped[item.title].push(label);
+          });
 
-        return Object.entries(grouped).map(
-          ([title, skills]) => ({ title, skills })
-        );
-      };
+          return Object.entries(grouped).map(([title, skills]) => ({
+            title,
+            skills,
+          }));
+        };
 
-      // Format the skills, tasks, and evaluations
-      const formattedSkills = groupByTitle(skillsData.results);
-      const formattedTasks = groupByTitle(tasksData.results);
-      const formattedEval = groupByTitle(evalData.results);
-
-      setSkillsOptions(formattedSkills);
-      setTasksOptions(formattedTasks);
-      setEvalOptions(formattedEval);
-    }).catch(console.error)
-
-  }, [selectedDivision, formState.internPosition]);
+        // Format the skills, tasks, and evaluations
+        setSkillsOptions(groupByTitle(skillsData.results));
+        setTasksOptions(groupByTitle(tasksData.results));
+        setEvalOptions(groupByTitle(evalData.results));
+      })
+      .catch(console.error);
+  }, [selectedDivision, formState.internPosition, token]);
 
   // Get today's date in the format "Month Day, Year"
-  const today = new Date()
+  const today = new Date();
   const formattedDate = today.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
-  })
+  });
 
   return (
-
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center gap-y-6">
+    <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="relative">
         {/* PrintView — The element is hidden for a user, only for shooting in PDF */}
         <div className="absolute top-0 left-[-9999px] opacity-0 pointer-events-none">
@@ -302,19 +312,19 @@ const RecommendationPage: React.FC = () => {
           />
         </div>
       </div>
-      <main className=" bg-white pl-[200px] pr-[200px] shadow-lg rounded-lg pt-[100px]">
-        <header
-          className="mt-[30px] flex justify-between items-center"
-        >
-          <div className='flex flex-col'>
+      <main className=" bg-white pl-[80px] pr-[80px] pt-[50px]">
+        <header className="flex justify-between items-center">
+          <div className="flex flex-col">
             <Image
               src="/images/avb.png"
               alt="AVB Logo"
-              width={272}
+              width={180}
               height={116}
               className="object-contain"
             />
-            <p className="p-small">AUTO VENTURE BUILDER</p>
+            <p className="p-small text-center mt-[10px]">
+              AUTO VENTURE BUILDER
+            </p>
           </div>
           <div
             className="
@@ -324,20 +334,26 @@ const RecommendationPage: React.FC = () => {
             leading-tight
           "
           >
-            <p className='p-small'><strong>Auto Venture Builder Invest Inc</strong></p>
-            <p className='p-small'>373 Lexington Avenue,</p>
-            <p className='p-small'>369 New Your, NY, 10017</p>
-            <p className='p-small'><strong>AVB Invest Inc</strong></p>
-            <p className='p-small'>@onboarding_team@avbinvest.co</p>
+            <p className="p-small">
+              <strong>Auto Venture Builder Invest Inc</strong>
+            </p>
+            <p className="p-small">373 Lexington Avenue,</p>
+            <p className="p-small">369 New Your, NY, 10017</p>
+            <p className="p-small mt-[10px]">
+              <strong>AVB Invest Inc</strong>
+            </p>
+            <p className="p-small">@onboarding_team@avbinvest.co</p>
           </div>
         </header>
 
-        <div className="pt-[90px] flex justify-center">
-          <h1 className="text-[54px] font-medium mb-[80px]">Letter of Recommendation</h1>
+        <div className="pt-[80px] flex justify-center">
+          <h1 className="text-[44px] font-medium mb-[50px]">
+            Letter of Recommendation
+          </h1>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col">
-            <div className="flex items-center mb-[50px]">
+            <div className="flex items-center mb-[35px]">
               <p>This letter confirms that</p>
 
               <SearchableDropdown
@@ -351,30 +367,33 @@ const RecommendationPage: React.FC = () => {
               <p>has finished</p>
             </div>
 
-            <div className=' flex items-center mb-[10px]'>
+            <div className=" flex items-center mb-[35px]">
               <Dropdown
-                placeholder='Division'
+                placeholder="Division"
                 options={divisions}
                 value={selectedDivision}
                 onChange={setSelectedDivision}
-                className="w-[439px]"
               />
 
-              <p className='pr-[8px] pl-[8px]'>an intership as a </p>
+              <p className="pr-[10px] pl-[10px] ml-[12px] mr-[12px]">
+                an intership as a{' '}
+              </p>
 
               <Dropdown
-                placeholder='Position'
+                placeholder="Position"
                 options={positions}
                 value={formState.internPosition}
-                onChange={val =>
-                  setFormState(prev => ({ ...prev, internPosition: val }))
+                onChange={(val) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    internPosition: val,
+                  }))
                 }
-                className="w-[434px]"
               />
             </div>
 
-            <div className="flex items-center mb-[20px]">
-              <p className='pr-[12px]'>at AVB from</p>
+            <div className="flex items-center mb-[35px]">
+              <p className="pr-[12px]">at AVB from</p>
 
               <DatePickerField
                 placeholderText="Start Day"
@@ -382,7 +401,7 @@ const RecommendationPage: React.FC = () => {
                 onChange={setStartDate}
               />
 
-              <p className="pr-[12px]">to</p>
+              <p className="mr-[12px] ml-[12px]">to</p>
 
               <DatePickerField
                 placeholderText="End Day"
@@ -393,28 +412,33 @@ const RecommendationPage: React.FC = () => {
           </div>
 
           <div>
-            <p>And demonstrated the following skills and competences:</p>
+            <p>
+              And demonstrated the following skills and
+              competences:
+            </p>
 
             <MultiSelectDropdown
               options={skillsOptions}
               selected={selectedSkills}
               onChange={setSelectedSkills}
               placeholder="Skills/Achievements/Etc."
-              className="w-[567px] mb-[50px] mt-[18px]"
+              className="mt-[18px]"
             />
 
-            <div className="flex items-center gap-x-2 mb-[10px]">
+            <div className="flex items-center gap-x-2 mb-[35px]">
               <input
                 type="text"
                 readOnly
-                className="border-b text-[28px] text-[#192836] pl-[8px] w-[312px]"
+                className="border-b 
+                text-[22px] 
+                text-[#192836] 
+                pl-[8px] 
+                w-[335px]"
                 value={formState.internName}
                 placeholder="Intern’s Full Name"
               />
 
-              <p>
-                during the Internship worked on the following Projects:
-              </p>
+              <p>during the Internship worked on the following Projects:</p>
             </div>
 
             <MultiSelectDropdown
@@ -422,7 +446,7 @@ const RecommendationPage: React.FC = () => {
               selected={selectedTasks}
               onChange={setSelectedTasks}
               placeholder="Projects Completed/Tasks"
-              className="mb-[20px]"
+              className="w-full"
             />
 
             <MultiSelectDropdown
@@ -430,34 +454,37 @@ const RecommendationPage: React.FC = () => {
               selected={selectedEvals}
               onChange={setSelectedEvals}
               placeholder="Personal Evaluation of the Results of the Intern"
-              className="mb-[20px]"
+              className="w-full"
             />
           </div>
 
           <textarea
-            placeholder="Free writing About Intern "
+            placeholder="Free writing about Intern "
             value={formState.notes}
-            onChange={e =>
-              setFormState(prev => ({
+            onChange={(e) =>
+              setFormState((prev) => ({
                 ...prev,
                 notes: e.target.value,
               }))
             }
             className="
-              w-full border-[1px] border-black
-              text-[28px] text-[#192836] placeholder-[#192836]/40
+              w-full 
+              border-[1px] 
+              border-black
+              text-[22px] 
+               placeholder-[#192836]/40
               overflow-y-auto
               focus:outline-none resize-none
               h-[110px]
               pl-[20px]
               pt-[24px]
-              mb-[50px]
+              mb-[35px]
             "
           ></textarea>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p>
+            <div className="flex items-center justify-between mb-[35px]">
+              <p className="mr-[10px]">
                 It is my great pleasure to recommend this Intern for employment as a
               </p>
               <Dropdown
@@ -465,12 +492,12 @@ const RecommendationPage: React.FC = () => {
                 options={positions}
                 value={selectedPosition}
                 onChange={setSelectedPosition}
-                className="w-[610px]"
+                className=""
               />
             </div>
 
             <Dropdown
-              placeholder='Please, let me know, if you need any additional in formation.'
+              placeholder="Please, let me know, if you need any additional in formation."
               options={sentences}
               value={selectedSenteces}
               onChange={SetSelectedSentences}
@@ -479,84 +506,68 @@ const RecommendationPage: React.FC = () => {
           </div>
 
           {/* Sincerely-block  */}
-          <div className="flex justify-between items-end mb-[42px]">
+          <div className="grid grid-cols-[max-content_1fr_max-content] items-start gap-4 mb-[100px] mt-[100px]">
             {/** Left side **/}
-            <div className="">
-              <p className="text-[10px]">Sincerely,</p>
+            <div className="flex flex-col space-y-1">
+              <p>Sincerely,</p>
 
               {/* Full Name */}
               <input
                 type="text"
-                placeholder='Serge Garden'
+                placeholder="Serge Garden"
                 value={formState.recommenderName}
                 readOnly
                 className="
                   w-[200px]
-                  border-b border-black
-                  text-[10px] placeholder-[#192836] 
-                  focus:outline-none py-1
+                  border-b 
+                  border-black
+                  py-1
                   pl-[8px]
                 "
               />
 
               <input
                 type="text"
-                placeholder='CEO'
+                placeholder="CEO"
                 value={formState.recommenderPosition}
                 readOnly
                 className="
                   w-[200px]
                   border-b border-black
-                  text-[10px] placeholder-[#192836] 
-                  focus:outline-none py-1
+                  py-1
                   pl-[8px]
                 "
               />
 
               <input
                 type="email"
-                placeholder='team@avbinvest.com'
+                placeholder="team@avbinvest.com"
                 value={formState.recommenderEmail}
                 readOnly
                 className="
                   w-[200px]
                   border-b border-black
-                  text-[10px] placeholder-[#192836] 
-                  focus:outline-none py-1
+                  py-1
                   pl-[8px]
                 "
               />
             </div>
 
-            {/** Right side **/}
-            <div className="space-y-4 flex flex-col items-end">
-              {/* Signature  // переделать дропдаун на image подписи и печати */}
-              <Dropdown
-                placeholder="Signature"
-                options={[]} 
-                value={formState.signature || ''}
-                onChange={val => setFormState(prev => ({ ...prev, signature: val }))}
-                className="w-[200px]"
-              />
-
-              {/* Current date */}
-              <p className="text-[10px] text-[#192836]">
-                {formattedDate}
-              </p>
-            </div>
           </div>
+          {/* Current date */}
+          <p className="p-small text-[#192836] text-end">
+            {formattedDate}
+          </p>
           <div className="flex justify-center items-center">
             <button
               type="submit"
-              className="cursor-pointer bg-[#4F93CF] text-white text-[20px] rounded-[88px] py-[10px] px-[66px]"
+              className="cursor-pointer bg-[#4F93CF] text-white text-[22px] rounded-[88px] py-[10px] px-[66px] mb-[20px]"
             >
               Submit
             </button>
           </div>
         </form>
-
       </main>
-
     </div>
   );
 };
