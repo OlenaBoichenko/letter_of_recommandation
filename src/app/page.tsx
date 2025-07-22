@@ -506,7 +506,7 @@ const RecommendationPage: React.FC = () => {
           </div>
 
           {/* Sincerely-block  */}
-          <div className="grid grid-cols-[max-content_1fr_max-content] items-start gap-4 mb-[100px] mt-[100px]">
+          <div className="grid grid-cols-[max-content_2fr_max-content] items-end mb-[100px] mt-[100px]">
             {/** Left side **/}
             <div className="flex flex-col space-y-1">
               <p>Sincerely,</p>
@@ -552,12 +552,14 @@ const RecommendationPage: React.FC = () => {
                 "
               />
             </div>
-
+            {/* Current date */}
+            <div className="flex flex-col items-end">
+              <p className='p-small text-[#192836]'>
+                {formattedDate}
+              </p>
+            </div>
           </div>
-          {/* Current date */}
-          <p className="p-small text-[#192836] text-end">
-            {formattedDate}
-          </p>
+
           <div className="flex justify-center items-center">
             <button
               type="submit"
