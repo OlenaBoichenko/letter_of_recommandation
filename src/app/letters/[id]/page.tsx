@@ -15,7 +15,7 @@ export default async function LetterPage({
   const { id } = await params
 
 // Request to the API to receive a letter by id
-  const res = await fetch(`http://49.12.128.167:8052/api/letters/${id}`)
+  const res = await fetch(`/api/letters/${id}`)
   if (!res.ok) return notFound()
 
   const letter: Letter = await res.json()

@@ -77,9 +77,9 @@ export const MultiSelectDropdown: React.FC<MultiSelectProps> = ({
                         mt-1 
                         max-h-34          
                         overflow-y-auto  
-                     bg-white 
+                        bg-white 
                         border 
-                     border-gray-200 
+                        border-gray-200 
                         shadow-md
                         "
                         >

@@ -39,11 +39,6 @@ const sentences = [
   'We are confident in the intern’s professional potential and wish them continued success.',
 ];
 
-// Interface for the intern object
-// interface Intern {
-//   full_name: string;
-//   position_name: string;
-// }
 
 const RecommendationPage: React.FC = () => {
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -149,7 +144,7 @@ const RecommendationPage: React.FC = () => {
       formData.append('data', JSON.stringify(payload));
 
       const res = await fetch(
-        'http://49.12.128.167:8052/api/v1/letters/recommendations/',
+        '/api/v1/letters/recommendations/',
         {
           method: 'POST',
           headers: {
@@ -185,7 +180,7 @@ const RecommendationPage: React.FC = () => {
 
   // Fetch interns from the API based on the search query
   const fetchInterns = async (query: string): Promise<void> => {
-    const url = `http://49.12.128.167:8052/api/v1/users/external_users/?full_name=${encodeURIComponent(
+    const url = `/api/v1/users/external_users/?full_name=${encodeURIComponent(
       query,
     )}`;
 
@@ -212,7 +207,7 @@ const RecommendationPage: React.FC = () => {
 
   useEffect(() => {
     // Download divisions
-    fetch('http://49.12.128.167:8052/api/v1/organizations/divisions', {
+    fetch('/api/v1/organizations/divisions', {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -222,7 +217,7 @@ const RecommendationPage: React.FC = () => {
       .then((data) => setDivisions(data.results.map((d) => d.name)));
 
     //Download positions
-    fetch('http://49.12.128.167:8052/api/v1/users/positions', {
+    fetch('/api/v1/users/positions', {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -239,18 +234,17 @@ const RecommendationPage: React.FC = () => {
       division_name: selectedDivision,
     });
 
-    const BACKEND = 'http://49.12.128.167:8052';
     const headers = { Authorization: `Bearer ${token}` };
 
     // Fetch skills, tasks, and evaluations from the API
     Promise.all([
-      fetch(`${BACKEND}/api/v1/letters/skills/?${params}`, {
+      fetch(`/api/v1/letters/skills/?${params}`, {
         headers,
       }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
-      fetch(`${BACKEND}/api/v1/letters/project-tasks/?${params}`, {
+      fetch(`/api/v1/letters/project-tasks/?${params}`, {
         headers,
       }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
-      fetch(`${BACKEND}/api/v1/letters/evaluations/?${params}`, {
+      fetch(`/api/v1/letters/evaluations/?${params}`, {
         headers,
       }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
     ])
