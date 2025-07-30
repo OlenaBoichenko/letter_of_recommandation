@@ -29,16 +29,6 @@ interface OptionItem {
   text?: string;
 }
 
-// Array with sentences for the dropdown list
-const sentences = [
-  'Please, let me know, if you need any additional information.',
-  'We recommend the intern as a promising young specialist in the field of IT law.',
-  'The internship was successfully completed with excellent results.',
-  'The intern handled all assigned tasks with confidence and demonstrated a high level of preparation.',
-  'Showed confident use of legal tools necessary in the field of information technology.',
-  'We are confident in the intern’s professional potential and wish them continued success.',
-];
-
 
 const RecommendationPage: React.FC = () => {
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -50,6 +40,7 @@ const RecommendationPage: React.FC = () => {
   const [skillsOptions, setSkillsOptions] = useState<GroupedSkills[]>([]);
   const [tasksOptions, setTasksOptions] = useState<GroupedSkills[]>([]);
   const [evalOptions, setEvalOptions] = useState<GroupedSkills[]>([]);
+  const [finalTextOptions, setFinalTextOptions] = useState<GroupedSkills[]>([]);
 
   const [selectedInterns, setSelectedInterns] = useState<Intern | null>(null);
   const [selectedDivision, setSelectedDivision] = useState<string>('');
@@ -57,7 +48,7 @@ const RecommendationPage: React.FC = () => {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
   const [selectedEvals, setSelectedEvals] = useState<string[]>([]);
-  const [selectedSenteces, SetSelectedSentences] = useState<string>('');
+  const [selectedFinalText, setSelectedFinalText] = useState<string[]>([]);
 
   const [formState, setFormState] = useState({
     interns: '',
@@ -72,7 +63,7 @@ const RecommendationPage: React.FC = () => {
     recommenderName: 'Serge Garden',
     recommenderPosition: 'CEO',
     recommenderEmail: 'team@avbinvest.com',
-    sentences: '',
+    finalText: '',
     signature: '',
   });
 
@@ -97,16 +88,20 @@ const RecommendationPage: React.FC = () => {
     e.preventDefault();
     if (!letterRef.current) return;
 
-    const dataUrl = await toPng(letterRef.current);
+    const dataUrl = await toPng(letterRef.current!, {
+  pixelRatio: 3,          
+  cacheBust: true,
+  backgroundColor: '#fff',
+});
 
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const img = new window.Image();
     img.src = dataUrl;
 
     await new Promise((r) => (img.onload = r));
     const pdfHeight = (img.height * pdfWidth) / img.width;
-    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
 
     const rawName = selectedInterns?.full_name || 'intern';
 
@@ -120,46 +115,48 @@ const RecommendationPage: React.FC = () => {
     pdf.save(fileName);
 
     // generate the payload for the backend
-    const payload = {
-      intern_full_name: selectedInterns?.full_name || '',
-      division_name: selectedDivision,
-      start_day: fmt(startDate),
-      end_day: fmt(endDate),
-      skills: selectedSkills, // Skills/Achievements/Etc.
-      projects_tasks: selectedTasks.join('; '), // Projects Completed/Tasks
-      personal_evaluation: selectedEvals.join('; '), // Personal Evaluation
-      about_cobuilder: formState.notes, // Free writing About Intern
-      recommendation_position: selectedPosition, // убрать если письмо не будет отправляться на сервер
-      responsible_full_name: formState.recommenderName,
-      responsible_position: formState.recommenderPosition,
-      responsible_email: formState.recommenderEmail,
-      dataOfIssue: formattedDate,
-    };
+    // const payload = {
+    //   intern_full_name: selectedInterns?.full_name || '',
+    //   division_name: selectedDivision,
+    //   start_day: fmt(startDate),
+    //   end_day: fmt(endDate),
+    //   skills: selectedSkills, // Skills/Achievements/Etc.
+    //   projects_tasks: selectedTasks.join('; '), // Projects Completed/Tasks
+    //   personal_evaluation: selectedEvals.join('; '), // Personal Evaluation
+    //   about_cobuilder: formState.notes, // Free writing About Intern
+    //   finlal_text: formState.finalText, // Final text
+    //   recommendation_position: selectedPosition, 
+    //   responsible_full_name: formState.recommenderName,
+    //   responsible_position: formState.recommenderPosition,
+    //   responsible_email: formState.recommenderEmail,
+    //   dataOfIssue: formattedDate,
+    // };
 
+    // убрать если письмо не будет отправляться на сервер
     try {
       // sending to backend
-      const pdfBlob = pdf.output('blob');
-      const formData = new FormData();
-      formData.append('file', pdfBlob, 'recommendation.pdf');
-      formData.append('data', JSON.stringify(payload));
+      // const pdfBlob = pdf.output('blob');
+      // const formData = new FormData();
+      // formData.append('file', pdfBlob, 'recommendation.pdf');
+      // formData.append('data', JSON.stringify(payload));
 
-      const res = await fetch(
-        '/api/v1/letters/recommendations/',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        },
-      );
+      // const res = await fetch(
+      //   '/api/v1/letters/recommendations/',
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //     body: formData,
+      //   },
+      // );
 
-      if (!res.ok) {
-        const err = await res.json();
-        console.error('Error creating letter:', err);
-        alert('Failed to send recommendation letter');
-        return;
-      }
+      // if (!res.ok) {
+      //   const err = await res.json();
+      //   console.error('Error creating letter:', err);
+      //   alert('Failed to send recommendation letter');
+      //   return;
+      // }
 
       // const data = await res.json()
       alert('Recommendation letter was successfully created!');
@@ -168,10 +165,15 @@ const RecommendationPage: React.FC = () => {
       setSelectedInterns(null);
       setSelectedDivision('');
       setStartDate(null);
+      setEndDate(null);
       setSelectedPosition('');
       setSelectedSkills([]);
       setSelectedTasks([]);
       setSelectedEvals([]);
+      setSelectedFinalText([]);
+      formState.internName = '';
+      formState.internPosition = '';
+      formState.notes = '';
     } catch (e) {
       console.error(e);
       alert('Network error when sending a letter');
@@ -180,7 +182,7 @@ const RecommendationPage: React.FC = () => {
 
   // Fetch interns from the API based on the search query
   const fetchInterns = async (query: string): Promise<void> => {
-    const url = `/api/v1/users/external_users/?full_name=${encodeURIComponent(
+    const url = `http://49.12.128.167:8052/api/v1/users/external_users/?full_name=${encodeURIComponent(
       query,
     )}`;
 
@@ -207,7 +209,7 @@ const RecommendationPage: React.FC = () => {
 
   useEffect(() => {
     // Download divisions
-    fetch('/api/v1/organizations/divisions', {
+    fetch('http://49.12.128.167:8052/api/v1/organizations/divisions', {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -217,7 +219,7 @@ const RecommendationPage: React.FC = () => {
       .then((data) => setDivisions(data.results.map((d) => d.name)));
 
     //Download positions
-    fetch('/api/v1/users/positions', {
+    fetch('http://49.12.128.167:8052/api/v1/users/positions', {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -236,19 +238,22 @@ const RecommendationPage: React.FC = () => {
 
     const headers = { Authorization: `Bearer ${token}` };
 
-    // Fetch skills, tasks, and evaluations from the API
+    // Fetch skills, tasks, evaluations and final_text from the API
     Promise.all([
-      fetch(`/api/v1/letters/skills/?${params}`, {
+      fetch(`http://49.12.128.167:8052/api/v1/letters/skills/?${params}`, {
         headers,
       }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
-      fetch(`/api/v1/letters/project-tasks/?${params}`, {
+      fetch(`http://49.12.128.167:8052/api/v1/letters/project-tasks/?${params}`, {
         headers,
       }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
-      fetch(`/api/v1/letters/evaluations/?${params}`, {
+      fetch(`http://49.12.128.167:8052/api/v1/letters/evaluations/?${params}`, {
+        headers,
+      }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
+      fetch(`http://49.12.128.167:8052/api/v1/letters/final-texts/?${params}`, {
         headers,
       }).then((r) => r.json() as Promise<ApiResponse<OptionItem>>),
     ])
-      .then(([skillsData, tasksData, evalData]) => {
+      .then(([skillsData, tasksData, evalData, finalData]) => {
         // Grouping skills, tasks, and evaluations by title
         const groupByTitle = (arr: OptionItem[]): GroupedSkills[] => {
           const grouped: Record<string, string[]> = {};
@@ -269,6 +274,7 @@ const RecommendationPage: React.FC = () => {
         setSkillsOptions(groupByTitle(skillsData.results));
         setTasksOptions(groupByTitle(tasksData.results));
         setEvalOptions(groupByTitle(evalData.results));
+        setFinalTextOptions(groupByTitle(finalData.results));
       })
       .catch(console.error);
   }, [selectedDivision, formState.internPosition, token]);
@@ -298,7 +304,7 @@ const RecommendationPage: React.FC = () => {
             personalEvaluation={selectedEvals.join(' ')}
             aboutCobuilder={formState.notes}
             recommendationPosition={selectedPosition}
-            sentence={selectedSenteces}
+            final_text={selectedFinalText.join(' ')}
             responsibleFullName={formState.recommenderName}
             responsiblePosition={formState.recommenderPosition}
             responsibleEmail={formState.recommenderEmail}
@@ -490,13 +496,20 @@ const RecommendationPage: React.FC = () => {
               />
             </div>
 
-            <Dropdown
+            <MultiSelectDropdown
+              options={finalTextOptions}
+              selected={selectedFinalText}
+              onChange={setSelectedFinalText}
+              placeholder="Please, let me know, if you need any additional in formation."
+              className="w-full"
+            />
+            {/* <Dropdown
               placeholder="Please, let me know, if you need any additional in formation."
               options={sentences}
               value={selectedSenteces}
               onChange={SetSelectedSentences}
               className="w-full"
-            />
+            /> */}
           </div>
 
           {/* Sincerely-block  */}

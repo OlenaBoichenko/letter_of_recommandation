@@ -12,7 +12,7 @@ export interface PrintViewProps {
   projectsTasks: string
   personalEvaluation: string
   aboutCobuilder: string
-  sentence: string
+  final_text: string
   responsibleFullName: string
   responsiblePosition: string
   responsibleEmail: string
@@ -30,7 +30,7 @@ export const PrintView = forwardRef<HTMLDivElement, PrintViewProps>(({
   projectsTasks,
   personalEvaluation,
   aboutCobuilder,
-  sentence,
+  final_text,
   responsibleFullName,
   responsiblePosition,
   responsibleEmail,
@@ -106,7 +106,7 @@ export const PrintView = forwardRef<HTMLDivElement, PrintViewProps>(({
         {recommendationPosition}.
       </p>
       <p className="mb-[10mm] p-print">
-        {sentence}.
+        {final_text}.
       </p>
     </main>
     <footer>
